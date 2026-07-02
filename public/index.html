@@ -2,26 +2,370 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>YuvaSense</title>
+<title>YuvaSense — Kreşiniz İçin Akıllı Yönetim Sistemi</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="YuvaSense; kreş ve anaokulları için çocuk/veli yönetimi, dijital yoklama, faturalandırma ve veli portalı sunan tek panelli yönetim sistemi. Ücretsiz demo talep edin.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
 </head>
-<body>
+<body class="landing-body">
 <script>
+  // Oturumu olan kullanıcıyı doğrudan paneline yönlendir; misafirler tanıtım sayfasını görür.
   fetch("/api/auth/me", { credentials: "include" })
-    .then((res) => {
-      if (!res.ok) throw new Error("no-session");
-      return res.json();
-    })
+    .then((res) => (res.ok ? res.json() : null))
     .then((data) => {
-      if (data.user.role === "parent") {
-        window.location.replace("/parent-portal/index.html");
-      } else {
-        window.location.replace("/dashboard.html");
+      if (data && data.user) {
+        window.location.replace(data.user.role === "parent" ? "/parent-portal/index.html" : "/dashboard.html");
       }
     })
-    .catch(() => {
-      window.location.replace("/login.html");
-    });
+    .catch(() => {});
+</script>
+
+<header class="landing-nav">
+  <div class="landing-nav-inner">
+    <div class="brand">
+      <svg class="logo-mark" viewBox="0 0 32 32"><rect width="32" height="32" rx="9" fill="#1e8a78"/><path d="M9 17.5c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5-3.1 5.5-7 5.5-7-1.9-7-5.5z" fill="#fff"/><circle cx="13" cy="16.5" r="1.4" fill="#1e8a78"/><circle cx="19" cy="16.5" r="1.4" fill="#1e8a78"/></svg>
+      YuvaSense
+    </div>
+    <nav class="landing-nav-links">
+      <a href="#ozellikler">Özellikler</a>
+      <a href="#nasil-calisir">Nasıl Çalışır</a>
+      <a href="#fiyatlandirma">Fiyatlandırma</a>
+      <a href="#demo-talep">İletişim</a>
+    </nav>
+    <div class="landing-nav-actions">
+      <a href="/login.html" class="btn btn-ghost btn-sm">Giriş Yap</a>
+      <button class="btn btn-primary btn-sm" id="navDemoBtn">Canlı Demoyu Gör</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- ---------- HERO ---------- -->
+  <section class="hero-section">
+    <div class="hero-inner">
+      <div class="hero-copy">
+        <span class="tag-pill">Kreş &amp; Anaokulu Yönetim Sistemi</span>
+        <h1>Kreşinizi Excel ve kağıt yoklamadan kurtarın</h1>
+        <p class="hero-sub">
+          YuvaSense; çocuk ve veli kayıtları, dijital yoklama, faturalandırma, personel ve sınıf yönetimini
+          tek panelde birleştirir. Veliler kendi portalından çocuklarının durumunu anlık takip eder.
+        </p>
+        <div class="hero-actions">
+          <button class="btn btn-primary" id="heroDemoBtn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Canlı Demoyu Şimdi İncele
+          </button>
+          <a href="#demo-talep" class="btn btn-ghost">Ücretsiz Demo Talep Et</a>
+        </div>
+        <p class="hero-note">Kredi kartı gerekmez · Mock verilerle dolu tam işlevsel bir kurulum görürsünüz</p>
+      </div>
+
+      <div class="hero-visual" aria-hidden="true">
+        <div class="mock-window">
+          <div class="mock-titlebar"><span></span><span></span><span></span></div>
+          <div class="mock-body">
+            <div class="mock-kpis">
+              <div class="mock-kpi"><span>Kayıtlı Çocuk</span><strong>24</strong></div>
+              <div class="mock-kpi"><span>Devam Oranı</span><strong>%91</strong></div>
+              <div class="mock-kpi"><span>Aktif Sınıf</span><strong>4</strong></div>
+              <div class="mock-kpi"><span>Personel</span><strong>7</strong></div>
+            </div>
+            <div class="mock-bars">
+              <div class="mock-bar-row"><span>Kelebekler</span><div class="mock-bar-bg"><div class="mock-bar-fill" style="width:83%;background:#f6a623"></div></div></div>
+              <div class="mock-bar-row"><span>Arılar</span><div class="mock-bar-bg"><div class="mock-bar-fill" style="width:92%;background:#1e8a78"></div></div></div>
+              <div class="mock-bar-row"><span>Yıldızlar</span><div class="mock-bar-bg"><div class="mock-bar-fill" style="width:68%;background:#3b6bd6"></div></div></div>
+              <div class="mock-bar-row"><span>Güneşler</span><div class="mock-bar-bg"><div class="mock-bar-fill" style="width:75%;background:#d8536a"></div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- PROBLEM ---------- -->
+  <section class="landing-section landing-section-alt">
+    <div class="landing-section-inner">
+      <h2 class="section-title">Tanıdık geliyor mu?</h2>
+      <div class="problem-grid">
+        <div class="problem-card">
+          <span class="problem-icon">📋</span>
+          <h3>Dağınık Excel tabloları</h3>
+          <p>Çocuk bilgileri, yoklama ve ödemeler ayrı ayrı dosyalarda, güncel tutmak imkansız hale geliyor.</p>
+        </div>
+        <div class="problem-card">
+          <span class="problem-icon">📵</span>
+          <h3>Veliyle kopan iletişim</h3>
+          <p>Veliler çocuklarının o günkü durumunu, devamsızlığını veya bakiyesini öğrenmek için sizi arıyor.</p>
+        </div>
+        <div class="problem-card">
+          <span class="problem-icon">💸</span>
+          <h3>Kaçırılan ödemeler</h3>
+          <p>Gecikmiş aidatları takip etmek, hatırlatma yapmak elle yürütülünce gözden kaçıyor.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- FEATURES ---------- -->
+  <section class="landing-section" id="ozellikler">
+    <div class="landing-section-inner">
+      <h2 class="section-title">Tek panel, kreşinizin tamamı</h2>
+      <p class="section-sub">Yönetici ve öğretmenleriniz için işlevsel; veliler için şeffaf.</p>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon" style="background:var(--color-primary-light);color:var(--color-primary-dark);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <h3>Çocuk &amp; Veli Profilleri</h3>
+          <p>Sağlık notları, alerjiler, kayıt tarihi ve veli bilgileri tek bir kartta; sınıf bazlı filtrelenebilir.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background:#fbeed2;color:var(--color-warning);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          </div>
+          <h3>Dijital Yoklama</h3>
+          <p>Tek tıkla geldi / geç geldi / izinli / hasta işaretleyin, giriş-çıkış saatleri otomatik kaydedilsin.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background:#e1f3e6;color:var(--color-success);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+          </div>
+          <h3>Faturalandırma &amp; Tahsilat</h3>
+          <p>Aylık aidatlar otomatik oluşsun, gecikmiş ödemeler panelde anında görünsün.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background:#e7eefb;color:#3b6bd6;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
+          </div>
+          <h3>Personel &amp; Sınıf Yönetimi</h3>
+          <p>Öğretmen atamaları, doluluk oranları ve kapasite takibini tek ekrandan yönetin.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background:#fbe2e2;color:var(--color-danger);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <h3>Veli Portalı</h3>
+          <p>Veliler kendi girişleriyle çocuklarının yoklama geçmişini ve faturalarını anlık görür.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background:var(--color-primary-light);color:var(--color-primary-dark);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+          </div>
+          <h3>Anlık Panel &amp; Raporlar</h3>
+          <p>Devam oranı, doluluk ve gelir kalemlerini yönetim panelinde tek bakışta özetleyin.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- HOW IT WORKS ---------- -->
+  <section class="landing-section landing-section-alt" id="nasil-calisir">
+    <div class="landing-section-inner">
+      <h2 class="section-title">3 adımda kurulum</h2>
+      <div class="steps-grid">
+        <div class="step-card">
+          <span class="step-num">1</span>
+          <h3>Demo talep edin</h3>
+          <p>Aşağıdaki formu doldurun ya da canlı demoyu hemen inceleyin — kurulum gerekmez.</p>
+        </div>
+        <div class="step-card">
+          <span class="step-num">2</span>
+          <h3>Verilerinizi aktaralım</h3>
+          <p>Ekibimiz mevcut Excel/kağıt kayıtlarınızı sisteme aktarır, sınıf ve personel yapınızı tanımlar.</p>
+        </div>
+        <div class="step-card">
+          <span class="step-num">3</span>
+          <h3>Kullanmaya başlayın</h3>
+          <p>Yönetici ve öğretmenleriniz panelden, veliler kendi portalından erişime başlar.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- LIVE DEMO CTA ---------- -->
+  <section class="landing-section demo-cta-section">
+    <div class="landing-section-inner demo-cta-inner">
+      <div>
+        <h2 class="section-title" style="color:#fff;">Sistemi mock verilerle şimdi deneyin</h2>
+        <p class="section-sub" style="color:#cfe6e0;">
+          24 çocuk, 4 sınıf, 14 günlük yoklama ve 3 aylık fatura geçmişiyle dolu örnek bir kreşe
+          gerçek panel üzerinden göz atın. Kayıt gerekmez.
+        </p>
+      </div>
+      <div class="demo-cta-buttons">
+        <button class="btn btn-primary" id="ctaAdminDemoBtn">Yönetici Panelini Gör</button>
+        <button class="btn btn-ghost demo-cta-ghost" id="ctaParentDemoBtn">Veli Portalını Gör</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- PRICING ---------- -->
+  <section class="landing-section" id="fiyatlandirma">
+    <div class="landing-section-inner">
+      <h2 class="section-title">Kreşinizin büyüklüğüne göre planlar</h2>
+      <p class="section-sub">Tüm planlar demo ile başlar, ihtiyaca göre özelleştirilir.</p>
+      <div class="pricing-grid">
+        <div class="price-card">
+          <h3>Başlangıç</h3>
+          <p class="price-desc">Tek şube, 50 çocuğa kadar</p>
+          <div class="price-amount">₺990<span>/ay</span></div>
+          <ul class="price-features">
+            <li>Çocuk &amp; veli yönetimi</li>
+            <li>Dijital yoklama</li>
+            <li>Veli portalı</li>
+          </ul>
+          <a href="#demo-talep" class="btn btn-ghost" style="width:100%;justify-content:center;">Demo Talep Et</a>
+        </div>
+        <div class="price-card price-card-featured">
+          <span class="price-badge">En Çok Tercih Edilen</span>
+          <h3>Kurumsal</h3>
+          <p class="price-desc">Tek şube, sınırsız çocuk</p>
+          <div class="price-amount">₺1.990<span>/ay</span></div>
+          <ul class="price-features">
+            <li>Başlangıç'taki her şey</li>
+            <li>Faturalandırma &amp; tahsilat takibi</li>
+            <li>Personel &amp; sınıf yönetimi</li>
+            <li>Öncelikli destek</li>
+          </ul>
+          <a href="#demo-talep" class="btn btn-primary" style="width:100%;justify-content:center;">Demo Talep Et</a>
+        </div>
+        <div class="price-card">
+          <h3>Zincir Kreş</h3>
+          <p class="price-desc">Birden fazla şube</p>
+          <div class="price-amount">Teklif Al</div>
+          <ul class="price-features">
+            <li>Kurumsal'daki her şey</li>
+            <li>Çoklu şube raporlama</li>
+            <li>Özel entegrasyonlar</li>
+          </ul>
+          <a href="#demo-talep" class="btn btn-ghost" style="width:100%;justify-content:center;">İletişime Geç</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- DEMO REQUEST FORM ---------- -->
+  <section class="landing-section landing-section-alt" id="demo-talep">
+    <div class="landing-section-inner demo-form-grid">
+      <div class="demo-form-copy">
+        <h2 class="section-title" style="text-align:left;">Ücretsiz demo talep edin</h2>
+        <p class="section-sub" style="text-align:left;margin:0;">
+          Formu doldurun, ekibimiz 1 iş günü içinde sizinle iletişime geçip kreşinize özel bir demo planlasın.
+          Acele etmiyorsanız yukarıdaki <strong>Canlı Demoyu Gör</strong> butonuyla sistemi hemen mock verilerle deneyebilirsiniz.
+        </p>
+      </div>
+      <form class="card demo-form" id="demoForm">
+        <div id="demoFormFeedback" class="field-error" style="display:none;"></div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="dfName">Ad Soyad</label>
+            <input type="text" id="dfName" required placeholder="Adınız Soyadınız">
+          </div>
+          <div class="form-group">
+            <label for="dfDaycare">Kreş Adı</label>
+            <input type="text" id="dfDaycare" required placeholder="Minik Adımlar Kreşi">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="dfEmail">E-posta</label>
+            <input type="email" id="dfEmail" required placeholder="ornek@eposta.com">
+          </div>
+          <div class="form-group">
+            <label for="dfPhone">Telefon</label>
+            <input type="tel" id="dfPhone" required placeholder="0532 000 00 00">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="dfChildCount">Çocuk Sayısı</label>
+          <select id="dfChildCount">
+            <option value="1-20">1-20</option>
+            <option value="21-50">21-50</option>
+            <option value="51-100">51-100</option>
+            <option value="100+">100+</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="dfMessage">Mesajınız (opsiyonel)</label>
+          <textarea id="dfMessage" rows="3" placeholder="İhtiyaçlarınızdan kısaca bahsedin"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:11px;" id="demoSubmitBtn">Demo Talebi Gönder</button>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer class="landing-footer">
+  <div class="landing-footer-inner">
+    <div class="brand">
+      <svg class="logo-mark" viewBox="0 0 32 32"><rect width="32" height="32" rx="9" fill="#1e8a78"/><path d="M9 17.5c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5-3.1 5.5-7 5.5-7-1.9-7-5.5z" fill="#fff"/><circle cx="13" cy="16.5" r="1.4" fill="#1e8a78"/><circle cx="19" cy="16.5" r="1.4" fill="#1e8a78"/></svg>
+      YuvaSense
+    </div>
+    <p class="footer-links">
+      <a href="/login.html">Yönetim Girişi</a>
+      <a href="/parent-portal/login.html">Veli Portalı</a>
+      <a href="#demo-talep">Demo Talep Et</a>
+    </p>
+    <p class="footer-copy">&copy; 2026 YuvaSense. Tüm hakları saklıdır.</p>
+  </div>
+</footer>
+
+<script src="/js/api.js"></script>
+<script>
+  async function startLiveDemo(kind) {
+    const btns = document.querySelectorAll(".js-demo-trigger");
+    btns.forEach((b) => (b.disabled = true));
+    try {
+      if (kind === "parent") {
+        await Api.post("/api/auth/parent-login", { email: "elif.veli@example.com", password: "Veli2026!" });
+        window.location.href = "/parent-portal/index.html";
+      } else {
+        await Api.post("/api/auth/login", { email: "admin", password: "admin" });
+        window.location.href = "/dashboard.html";
+      }
+    } catch (err) {
+      showToast("Canlı demo başlatılamadı, giriş sayfasına yönlendiriliyorsunuz.", "error");
+      window.location.href = kind === "parent" ? "/parent-portal/login.html" : "/login.html";
+    }
+  }
+
+  ["navDemoBtn", "heroDemoBtn", "ctaAdminDemoBtn"].forEach((id) => {
+    const el = document.getElementById(id);
+    el.classList.add("js-demo-trigger");
+    el.addEventListener("click", () => startLiveDemo("admin"));
+  });
+  const parentBtn = document.getElementById("ctaParentDemoBtn");
+  parentBtn.classList.add("js-demo-trigger");
+  parentBtn.addEventListener("click", () => startLiveDemo("parent"));
+
+  document.getElementById("demoForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const feedback = document.getElementById("demoFormFeedback");
+    const submitBtn = document.getElementById("demoSubmitBtn");
+    feedback.style.display = "none";
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Gönderiliyor...";
+    try {
+      await Api.post("/api/public/demo-request", {
+        name: document.getElementById("dfName").value.trim(),
+        daycareName: document.getElementById("dfDaycare").value.trim(),
+        email: document.getElementById("dfEmail").value.trim(),
+        phone: document.getElementById("dfPhone").value.trim(),
+        childCount: document.getElementById("dfChildCount").value,
+        message: document.getElementById("dfMessage").value.trim()
+      });
+      document.getElementById("demoForm").reset();
+      showToast("Demo talebiniz alındı, en kısa sürede size ulaşacağız.", "success");
+    } catch (err) {
+      feedback.textContent = err.message || "Talep gönderilemedi.";
+      feedback.style.display = "block";
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Demo Talebi Gönder";
+    }
+  });
 </script>
 </body>
 </html>

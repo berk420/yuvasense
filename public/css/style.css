@@ -195,6 +195,122 @@ table.data-table td.actions { display: flex; gap: 8px; }
   .content { padding: 18px; }
 }
 
+/* ===========================================================
+   Landing / Tanıtım Sayfası
+   =========================================================== */
+.landing-body { background: var(--color-bg); }
+
+.landing-nav { position: sticky; top: 0; z-index: 50; background: rgba(255,255,255,0.92); backdrop-filter: blur(6px); border-bottom: 1px solid var(--color-border); }
+.landing-nav-inner { max-width: 1180px; margin: 0 auto; padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.landing-nav .brand { display: flex; align-items: center; gap: 9px; font-family: var(--font-display); font-weight: 700; font-size: 18px; }
+.landing-nav .brand .logo-mark { width: 28px; height: 28px; flex-shrink: 0; }
+.landing-nav-links { display: flex; gap: 26px; }
+.landing-nav-links a { font-size: 14px; font-weight: 500; color: var(--color-ink); }
+.landing-nav-links a:hover { color: var(--color-primary); }
+.landing-nav-actions { display: flex; align-items: center; gap: 10px; }
+
+/* ---------- Hero ---------- */
+.hero-section { max-width: 1180px; margin: 0 auto; padding: 64px 28px 40px; }
+.hero-inner { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 48px; align-items: center; }
+.hero-copy h1 { font-size: 40px; line-height: 1.15; margin: 14px 0 16px; }
+.hero-sub { font-size: 16px; line-height: 1.6; max-width: 520px; margin-bottom: 24px; }
+.hero-actions { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+.hero-actions .btn { padding: 12px 20px; font-size: 14.5px; }
+.hero-note { font-size: 12.5px; color: var(--color-ink-soft); }
+
+.hero-visual { display: flex; justify-content: center; }
+.mock-window { width: 100%; max-width: 420px; background: #fff; border-radius: var(--radius-lg); box-shadow: 0 20px 60px rgba(28,43,42,0.16); overflow: hidden; border: 1px solid var(--color-border); }
+.mock-titlebar { display: flex; gap: 6px; padding: 12px 14px; background: #eceae2; }
+.mock-titlebar span { width: 10px; height: 10px; border-radius: 50%; background: #d8d5c9; }
+.mock-titlebar span:nth-child(1) { background: #e5807a; }
+.mock-titlebar span:nth-child(2) { background: #e8c07a; }
+.mock-titlebar span:nth-child(3) { background: #7bbf8c; }
+.mock-body { padding: 20px; }
+.mock-kpis { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 18px; }
+.mock-kpi { background: var(--color-primary-light); border-radius: var(--radius-sm); padding: 12px 14px; }
+.mock-kpi span { display: block; font-size: 11px; color: var(--color-primary-dark); margin-bottom: 4px; }
+.mock-kpi strong { font-family: var(--font-display); font-size: 20px; color: var(--color-ink); }
+.mock-bars { display: flex; flex-direction: column; gap: 10px; }
+.mock-bar-row { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+.mock-bar-row span { width: 72px; flex-shrink: 0; color: var(--color-ink-soft); }
+.mock-bar-bg { flex: 1; background: #eceae2; border-radius: 999px; height: 7px; overflow: hidden; }
+.mock-bar-fill { height: 100%; border-radius: 999px; }
+
+/* ---------- Section shells ---------- */
+.landing-section { padding: 64px 28px; }
+.landing-section-alt { background: #eef1ee; }
+.landing-section-inner { max-width: 1180px; margin: 0 auto; }
+.section-title { font-size: 28px; text-align: center; margin-bottom: 10px; }
+.section-sub { text-align: center; font-size: 15px; max-width: 620px; margin: 0 auto 36px; }
+
+/* ---------- Problem cards ---------- */
+.problem-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+.problem-card { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: var(--shadow); padding: 24px; text-align: center; }
+.problem-icon { font-size: 30px; display: block; margin-bottom: 10px; }
+.problem-card h3 { font-size: 16px; }
+
+/* ---------- Feature cards ---------- */
+.features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+.feature-card { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: var(--shadow); padding: 24px; }
+.feature-icon { width: 44px; height: 44px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+.feature-card h3 { font-size: 16px; }
+.feature-card p { font-size: 13.5px; margin: 0; }
+
+/* ---------- Steps ---------- */
+.steps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+.step-card { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: var(--shadow); padding: 26px 24px; }
+.step-num { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: var(--color-primary); color: #fff; font-weight: 700; font-family: var(--font-display); margin-bottom: 12px; }
+.step-card h3 { font-size: 16px; }
+.step-card p { font-size: 13.5px; margin: 0; }
+
+/* ---------- Live demo CTA band ---------- */
+.demo-cta-section { background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary)); padding: 56px 28px; }
+.demo-cta-inner { display: flex; align-items: center; justify-content: space-between; gap: 28px; flex-wrap: wrap; }
+.demo-cta-inner .section-title, .demo-cta-inner .section-sub { text-align: left; margin: 0 0 8px; }
+.demo-cta-buttons { display: flex; gap: 12px; flex-shrink: 0; flex-wrap: wrap; }
+.demo-cta-ghost { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.5); color: #fff; }
+.demo-cta-ghost:hover { background: rgba(255,255,255,0.22); border-color: #fff; color: #fff; }
+
+/* ---------- Pricing ---------- */
+.pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; align-items: stretch; }
+.price-card { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: var(--shadow); padding: 28px 24px; display: flex; flex-direction: column; position: relative; }
+.price-card-featured { border-color: var(--color-primary); box-shadow: 0 10px 30px rgba(30,138,120,0.18); }
+.price-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--color-accent); color: #fff; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 999px; white-space: nowrap; }
+.price-card h3 { font-size: 18px; }
+.price-desc { font-size: 13px; margin-bottom: 14px; }
+.price-amount { font-family: var(--font-display); font-size: 30px; font-weight: 700; margin-bottom: 18px; }
+.price-amount span { font-size: 13px; font-weight: 500; color: var(--color-ink-soft); }
+.price-features { list-style: none; padding: 0; margin: 0 0 22px; flex: 1; display: flex; flex-direction: column; gap: 10px; font-size: 13.5px; }
+.price-features li { padding-left: 22px; position: relative; }
+.price-features li::before { content: "✓"; position: absolute; left: 0; color: var(--color-primary); font-weight: 700; }
+
+/* ---------- Demo request form section ---------- */
+.demo-form-grid { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 44px; align-items: start; }
+.demo-form-copy p { font-size: 14.5px; line-height: 1.6; }
+.demo-form { margin: 0; }
+
+/* ---------- Footer ---------- */
+.landing-footer { background: #152623; color: #aebcb9; padding: 34px 28px; }
+.landing-footer-inner { max-width: 1180px; margin: 0 auto; text-align: center; }
+.landing-footer .brand { display: inline-flex; align-items: center; gap: 9px; color: #fff; font-family: var(--font-display); font-weight: 700; font-size: 17px; margin-bottom: 14px; }
+.landing-footer .brand .logo-mark { width: 26px; height: 26px; }
+.footer-links { display: flex; justify-content: center; gap: 22px; margin-bottom: 14px; flex-wrap: wrap; }
+.footer-links a { color: #d9e6e3; font-size: 13.5px; }
+.footer-links a:hover { color: #fff; }
+.footer-copy { font-size: 12px; margin: 0; }
+
+@media (max-width: 900px) {
+  .landing-nav-links { display: none; }
+  .hero-inner { grid-template-columns: 1fr; }
+  .hero-copy h1 { font-size: 30px; }
+  .hero-actions { justify-content: center; }
+  .hero-visual { order: -1; }
+  .problem-grid, .features-grid, .steps-grid, .pricing-grid { grid-template-columns: 1fr; }
+  .demo-form-grid { grid-template-columns: 1fr; }
+  .demo-cta-inner { justify-content: center; text-align: center; }
+  .demo-cta-inner .section-title, .demo-cta-inner .section-sub { text-align: center; }
+}
+
 /* ---------- Parent portal ---------- */
 .parent-topbar {
   background: #fff; border-bottom: 1px solid var(--color-border);
