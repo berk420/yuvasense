@@ -1,0 +1,21 @@
+{
+  "name": "yuvasense",
+  "version": "1.0.0",
+  "private": true,
+  "description": "YuvaSense - kres ve anaokulu yonetim uygulamasi (backend + frontend)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "seed": "node src/db/seed.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "express-session": "^1.18.1",
+    "lowdb": "^1.0.0"
+  }
+}

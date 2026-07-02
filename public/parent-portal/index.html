@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Veli Portalı — YuvaSense</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header class="parent-topbar">
+  <div class="brand">
+    <svg class="logo-mark" viewBox="0 0 32 32"><rect width="32" height="32" rx="9" fill="#1e8a78"/><path d="M9 17.5c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5-3.1 5.5-7 5.5-7-1.9-7-5.5z" fill="#fff"/><circle cx="13" cy="16.5" r="1.4" fill="#1e8a78"/><circle cx="19" cy="16.5" r="1.4" fill="#1e8a78"/></svg>
+    YuvaSense — Veli Portalı
+  </div>
+  <a href="#" class="logout-link" id="logoutLink">Çıkış Yap</a>
+</header>
+
+<main class="parent-content" id="content">
+  <div class="loading-state">Yükleniyor...</div>
+</main>
+
+<script src="/js/api.js"></script>
+<script>
+  document.getElementById("logoutLink").addEventListener("click", async (e) => {
+    e.preventDefault();
+    try { await Api.post("/api/auth/logout"); } catch (err) {}
+    window.location.href = "/parent-portal/login.html";
+  });
+
+  async function renderChild(child) {
+    const [attendance, invoices] = await Promise.all([
+      Api.get(`/api/attendance/child/${child.id}`),
+      Api.get(`/api/invoices/child/${child.id}`)
+    ]);
+
+    const attendanceRows = attendance.length
+      ? attendance
+          .slice(0, 7)
+          .map((a) => `<tr><td>${fmtDate(a.date)}</td><td><span class="badge ${statusBadgeClass(a.status)}">${a.status}</span></td><td>${a.checkInTime || "—"}</td></tr>`)
+          .join("")
+      : `<tr class="empty-row"><td colspan="3">Henüz yoklama kaydı yok.</td></tr>`;
+
+    const invoiceRows = invoices.length
+      ? invoices
+          .slice(0, 5)
+          .map((i) => `<tr><td>${i.period}</td><td>${fmtMoney(i.amount)}</td><td>${fmtDate(i.dueDate)}</td><td><span class="badge ${statusBadgeClass(i.status)}">${i.status}</span></td></tr>`)
+          .join("")
+      : `<tr class="empty-row"><td colspan="4">Henüz fatura yok.</td></tr>`;
+
+    return `
+      <div class="child-card">
+        <div class="child-card-head">
+          <div>
+            <h2>${escapeHtml(child.firstName)} ${escapeHtml(child.lastName)}</h2>
+            <span class="child-card-sub">${escapeHtml(child.classroomName || "Sınıf atanmamış")}</span>
+          </div>
+          <span class="badge ${statusBadgeClass(child.status)}">${child.status}</span>
+        </div>
+
+        <div class="mini-section-title">Son Yoklamalar</div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Tarih</th><th>Durum</th><th>Giriş</th></tr></thead>
+            <tbody>${attendanceRows}</tbody>
+          </table>
+        </div>
+
+        <div class="mini-section-title">Faturalar</div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Dönem</th><th>Tutar</th><th>Vade</th><th>Durum</th></tr></thead>
+            <tbody>${invoiceRows}</tbody>
+          </table>
+        </div>
+      </div>`;
+  }
+
+  (async function () {
+    try {
+      const me = await Api.get("/api/auth/me");
+      if (me.user.role !== "parent") {
+        window.location.href = "/dashboard.html";
+        return;
+      }
+    } catch (err) {
+      window.location.href = "/parent-portal/login.html";
+      return;
+    }
+
+    const content = document.getElementById("content");
+    try {
+      const children = await Api.get("/api/parents/me/children");
+      if (!children.length) {
+        content.innerHTML = `<div class="loading-state">Hesabınıza bağlı bir çocuk kaydı bulunamadı.</div>`;
+        return;
+      }
+      const cards = await Promise.all(children.map(renderChild));
+      content.innerHTML = cards.join("");
+    } catch (err) {
+      content.innerHTML = `<div class="loading-state">Veriler yüklenirken bir hata oluştu.</div>`;
+    }
+  })();
+</script>
+</body>
+</html>

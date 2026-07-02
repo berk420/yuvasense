@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Sınıflar — YuvaSense</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main-area">
+    <header class="topbar">
+      <div><h1>Sınıflar</h1><p class="topbar-sub">Sınıfları ve kapasitelerini yönetin</p></div>
+      <div id="topbarActions"></div>
+    </header>
+    <main class="content">
+      <div class="card">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Sınıf</th><th>Yaş Grubu</th><th>Öğretmen</th><th>Doluluk</th><th></th></tr></thead>
+            <tbody id="rows"><tr class="empty-row"><td colspan="5">Yükleniyor...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-head"><h3 id="modalTitle">Yeni Sınıf</h3><button class="modal-close" id="modalClose">&times;</button></div>
+    <form id="classroomForm">
+      <input type="hidden" id="classroomId">
+      <div class="form-group"><label>Sınıf Adı</label><input type="text" id="name" required></div>
+      <div class="form-group"><label>Yaş Grubu</label><input type="text" id="ageGroup" required placeholder="örn. 2-3 Yaş"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Kapasite</label><input type="number" id="capacity" min="1" required></div>
+        <div class="form-group"><label>Renk</label><input type="color" id="color" value="#1e8a78"></div>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">Kaydet</button>
+    </form>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/shell.js"></script>
+<script>
+  let CURRENT_USER = null;
+
+  function openModal(classroom) {
+    document.getElementById("modalTitle").textContent = classroom ? "Sınıfı Düzenle" : "Yeni Sınıf";
+    document.getElementById("classroomId").value = classroom ? classroom.id : "";
+    document.getElementById("name").value = classroom ? classroom.name : "";
+    document.getElementById("ageGroup").value = classroom ? classroom.ageGroup : "";
+    document.getElementById("capacity").value = classroom ? classroom.capacity : 15;
+    document.getElementById("color").value = classroom ? classroom.color : "#1e8a78";
+    document.getElementById("modalOverlay").classList.add("open");
+  }
+  function closeModal() { document.getElementById("modalOverlay").classList.remove("open"); }
+  document.getElementById("modalClose").addEventListener("click", closeModal);
+
+  async function loadClassrooms() {
+    const list = await Api.get("/api/classrooms");
+    const rows = document.getElementById("rows");
+    if (!list.length) {
+      rows.innerHTML = `<tr class="empty-row"><td colspan="5">Henüz sınıf eklenmemiş.</td></tr>`;
+      return;
+    }
+    rows.innerHTML = list
+      .map((c) => {
+        const pct = Math.min(100, Math.round((c.childCount / c.capacity) * 100));
+        const adminActions = CURRENT_USER.role === "admin"
+          ? `<button class="btn btn-ghost btn-sm" data-edit="${c.id}">Düzenle</button>
+             <button class="btn btn-danger btn-sm" data-del="${c.id}">Sil</button>`
+          : "";
+        return `
+        <tr>
+          <td><span class="tag-pill" style="background:${c.color}22;color:${c.color}"><span style="width:8px;height:8px;border-radius:50%;background:${c.color};display:inline-block;"></span>${escapeHtml(c.name)}</span></td>
+          <td>${escapeHtml(c.ageGroup)}</td>
+          <td>${escapeHtml(c.teacherName || "—")}</td>
+          <td>${c.childCount} / ${c.capacity} (%${pct})</td>
+          <td class="actions">${adminActions}</td>
+        </tr>`;
+      })
+      .join("");
+
+    rows.querySelectorAll("[data-edit]").forEach((btn) =>
+      btn.addEventListener("click", () => openModal(list.find((c) => c.id === btn.dataset.edit)))
+    );
+    rows.querySelectorAll("[data-del]").forEach((btn) =>
+      btn.addEventListener("click", async () => {
+        if (!confirm("Bu sınıfı silmek istediğinize emin misiniz?")) return;
+        try {
+          await Api.del(`/api/classrooms/${btn.dataset.del}`);
+          showToast("Sınıf silindi.", "success");
+          loadClassrooms();
+        } catch (err) {
+          showToast(err.message, "error");
+        }
+      })
+    );
+  }
+
+  document.getElementById("classroomForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const id = document.getElementById("classroomId").value;
+    const payload = {
+      name: document.getElementById("name").value.trim(),
+      ageGroup: document.getElementById("ageGroup").value.trim(),
+      capacity: document.getElementById("capacity").value,
+      color: document.getElementById("color").value
+    };
+    try {
+      if (id) await Api.put(`/api/classrooms/${id}`, payload);
+      else await Api.post("/api/classrooms", payload);
+      showToast("Sınıf kaydedildi.", "success");
+      closeModal();
+      loadClassrooms();
+    } catch (err) {
+      showToast(err.message, "error");
+    }
+  });
+
+  (async function () {
+    CURRENT_USER = await initShell("classrooms");
+    if (CURRENT_USER.role === "admin") {
+      document.getElementById("topbarActions").innerHTML = `<button class="btn btn-primary" id="addBtn">+ Yeni Sınıf</button>`;
+      document.getElementById("addBtn").addEventListener("click", () => openModal(null));
+    }
+    try {
+      await loadClassrooms();
+    } catch (err) {
+      showToast(err.message || "Yüklenemedi.", "error");
+    }
+  })();
+</script>
+</body>
+</html>

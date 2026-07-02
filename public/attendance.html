@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Yoklama — YuvaSense</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main-area">
+    <header class="topbar">
+      <div><h1>Yoklama</h1><p class="topbar-sub">Günlük devam durumunu işaretleyin</p></div>
+    </header>
+    <main class="content">
+      <div class="filters-bar">
+        <input type="date" id="dateInput">
+        <select id="classroomFilter"><option value="">Tüm Sınıflar</option></select>
+      </div>
+      <div class="card">
+        <div class="attendance-grid" id="grid"><div class="loading-state">Yükleniyor...</div></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/shell.js"></script>
+<script>
+  const STATUS_OPTIONS = [
+    { value: "geldi", label: "Geldi", cls: "active-geldi" },
+    { value: "geç geldi", label: "Geç Geldi", cls: "active-gec-geldi" },
+    { value: "izinli", label: "İzinli", cls: "active-izinli" },
+    { value: "hasta", label: "Hasta", cls: "active-hasta" }
+  ];
+
+  function todayStr() {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  async function loadClassroomOptions() {
+    const list = await Api.get("/api/classrooms");
+    const sel = document.getElementById("classroomFilter");
+    list.forEach((c) => (sel.innerHTML += `<option value="${c.id}">${escapeHtml(c.name)}</option>`));
+  }
+
+  async function setStatus(childId, date, status) {
+    try {
+      await Api.post("/api/attendance", { childId, date, status });
+      showToast("Yoklama kaydedildi.", "success");
+      loadGrid();
+    } catch (err) {
+      showToast(err.message, "error");
+    }
+  }
+
+  async function loadGrid() {
+    const date = document.getElementById("dateInput").value || todayStr();
+    const classroomId = document.getElementById("classroomFilter").value;
+    const params = new URLSearchParams({ date });
+    if (classroomId) params.set("classroomId", classroomId);
+
+    const list = await Api.get("/api/attendance?" + params.toString());
+    const grid = document.getElementById("grid");
+    if (!list.length) {
+      grid.innerHTML = `<div class="loading-state">Bu sınıfta aktif çocuk bulunamadı.</div>`;
+      return;
+    }
+    grid.innerHTML = list
+      .map(
+        (rec) => `
+        <div class="attendance-row">
+          <span class="child-name">${escapeHtml(rec.childName)}</span>
+          <div class="status-btns">
+            ${STATUS_OPTIONS
+              .map(
+                (opt) =>
+                  `<button type="button" class="status-btn ${rec.status === opt.value ? opt.cls : ""}" data-child="${rec.childId}" data-status="${opt.value}">${opt.label}</button>`
+              )
+              .join("")}
+          </div>
+        </div>`
+      )
+      .join("");
+
+    grid.querySelectorAll(".status-btn").forEach((btn) =>
+      btn.addEventListener("click", () => setStatus(btn.dataset.child, date, btn.dataset.status))
+    );
+  }
+
+  (async function () {
+    await initShell("attendance");
+    document.getElementById("dateInput").value = todayStr();
+    await loadClassroomOptions();
+    document.getElementById("dateInput").addEventListener("change", loadGrid);
+    document.getElementById("classroomFilter").addEventListener("change", loadGrid);
+    try {
+      await loadGrid();
+    } catch (err) {
+      showToast(err.message || "Yüklenemedi.", "error");
+    }
+  })();
+</script>
+</body>
+</html>

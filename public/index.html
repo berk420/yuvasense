@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>YuvaSense</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+<script>
+  fetch("/api/auth/me", { credentials: "include" })
+    .then((res) => {
+      if (!res.ok) throw new Error("no-session");
+      return res.json();
+    })
+    .then((data) => {
+      if (data.user.role === "parent") {
+        window.location.replace("/parent-portal/index.html");
+      } else {
+        window.location.replace("/dashboard.html");
+      }
+    })
+    .catch(() => {
+      window.location.replace("/login.html");
+    });
+</script>
+</body>
+</html>

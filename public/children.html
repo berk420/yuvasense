@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Çocuklar — YuvaSense</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main-area">
+    <header class="topbar">
+      <div><h1>Çocuklar</h1><p class="topbar-sub">Kayıtlı çocukları görüntüleyin ve yönetin</p></div>
+      <div id="topbarActions"></div>
+    </header>
+    <main class="content">
+      <div class="filters-bar">
+        <input type="text" id="searchInput" placeholder="İsme göre ara...">
+        <select id="classroomFilter"><option value="">Tüm Sınıflar</option></select>
+        <select id="statusFilter">
+          <option value="">Tüm Durumlar</option>
+          <option value="aktif">Aktif</option>
+          <option value="pasif">Pasif</option>
+        </select>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Ad Soyad</th><th>Sınıf</th><th>Doğum Tarihi</th><th>Alerji</th><th>Durum</th><th></th></tr></thead>
+            <tbody id="rows"><tr class="empty-row"><td colspan="6">Yükleniyor...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-head"><h3>Yeni Çocuk Kaydı</h3><button class="modal-close" id="modalClose">&times;</button></div>
+    <form id="childForm">
+      <div class="form-row">
+        <div class="form-group"><label>Ad</label><input type="text" id="firstName" required></div>
+        <div class="form-group"><label>Soyad</label><input type="text" id="lastName" required></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Doğum Tarihi</label><input type="date" id="birthDate"></div>
+        <div class="form-group"><label>Sınıf</label><select id="classroomId" required></select></div>
+      </div>
+      <div class="form-group"><label>Alerji / Özel Durum</label><input type="text" id="allergies" placeholder="Yoksa boş bırakın"></div>
+      <div class="form-group"><label>Notlar</label><textarea id="notes" rows="2"></textarea></div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">Kaydet</button>
+    </form>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/shell.js"></script>
+<script>
+  let CURRENT_USER = null;
+  let CLASSROOMS = [];
+
+  function openModal() {
+    document.getElementById("childForm").reset();
+    document.getElementById("modalOverlay").classList.add("open");
+  }
+  function closeModal() { document.getElementById("modalOverlay").classList.remove("open"); }
+  document.getElementById("modalClose").addEventListener("click", closeModal);
+
+  async function loadClassroomOptions() {
+    CLASSROOMS = await Api.get("/api/classrooms");
+    const filterSel = document.getElementById("classroomFilter");
+    const formSel = document.getElementById("classroomId");
+    CLASSROOMS.forEach((c) => {
+      filterSel.innerHTML += `<option value="${c.id}">${escapeHtml(c.name)}</option>`;
+      formSel.innerHTML += `<option value="${c.id}">${escapeHtml(c.name)}</option>`;
+    });
+  }
+
+  async function loadChildren() {
+    const params = new URLSearchParams();
+    if (document.getElementById("searchInput").value) params.set("q", document.getElementById("searchInput").value);
+    if (document.getElementById("classroomFilter").value) params.set("classroomId", document.getElementById("classroomFilter").value);
+    if (document.getElementById("statusFilter").value) params.set("status", document.getElementById("statusFilter").value);
+
+    const list = await Api.get("/api/children?" + params.toString());
+    const rows = document.getElementById("rows");
+    if (!list.length) {
+      rows.innerHTML = `<tr class="empty-row"><td colspan="6">Kayıt bulunamadı.</td></tr>`;
+      return;
+    }
+    rows.innerHTML = list
+      .map(
+        (c) => `
+        <tr>
+          <td><a href="/child.html?id=${c.id}">${escapeHtml(c.firstName)} ${escapeHtml(c.lastName)}</a></td>
+          <td>${escapeHtml(c.classroomName || "—")}</td>
+          <td>${fmtDate(c.birthDate)}</td>
+          <td>${c.allergies ? escapeHtml(c.allergies) : "—"}</td>
+          <td><span class="badge ${statusBadgeClass(c.status)}">${c.status}</span></td>
+          <td class="actions"><a class="btn btn-ghost btn-sm" href="/child.html?id=${c.id}">Profil</a></td>
+        </tr>`
+      )
+      .join("");
+  }
+
+  document.getElementById("childForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try {
+      await Api.post("/api/children", {
+        firstName: document.getElementById("firstName").value.trim(),
+        lastName: document.getElementById("lastName").value.trim(),
+        birthDate: document.getElementById("birthDate").value,
+        classroomId: document.getElementById("classroomId").value,
+        allergies: document.getElementById("allergies").value.trim() || null,
+        notes: document.getElementById("notes").value.trim()
+      });
+      showToast("Çocuk kaydı oluşturuldu.", "success");
+      closeModal();
+      loadChildren();
+    } catch (err) {
+      showToast(err.message, "error");
+    }
+  });
+
+  ["searchInput", "classroomFilter", "statusFilter"].forEach((id) => {
+    document.getElementById(id).addEventListener("input", loadChildren);
+  });
+
+  (async function () {
+    CURRENT_USER = await initShell("children");
+    await loadClassroomOptions();
+    if (CURRENT_USER.role === "admin") {
+      document.getElementById("topbarActions").innerHTML = `<button class="btn btn-primary" id="addBtn">+ Yeni Çocuk</button>`;
+      document.getElementById("addBtn").addEventListener("click", openModal);
+    }
+    try {
+      await loadChildren();
+    } catch (err) {
+      showToast(err.message || "Yüklenemedi.", "error");
+    }
+  })();
+</script>
+</body>
+</html>

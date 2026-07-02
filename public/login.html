@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Giriş Yap — YuvaSense</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="brand">
+      <svg class="logo-mark" viewBox="0 0 32 32"><rect width="32" height="32" rx="9" fill="#1e8a78"/><path d="M9 17.5c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5-3.1 5.5-7 5.5-7-1.9-7-5.5z" fill="#fff"/><circle cx="13" cy="16.5" r="1.4" fill="#1e8a78"/><circle cx="19" cy="16.5" r="1.4" fill="#1e8a78"/></svg>
+      YuvaSense
+    </div>
+    <h1>Yönetim Paneli Girişi</h1>
+    <p class="sub">Personel ve yönetici hesabınızla giriş yapın</p>
+
+    <div id="formFeedback" class="field-error" style="display:none;margin-bottom:10px;"></div>
+
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="email">E-posta</label>
+        <input type="text" id="email" required placeholder="admin">
+      </div>
+      <div class="form-group">
+        <label for="password">Şifre</label>
+        <input type="password" id="password" required placeholder="••••••••">
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:11px;" id="submitBtn">Giriş Yap</button>
+    </form>
+
+    <div class="demo-creds">
+      <strong>Demo hesaplar:</strong><br>
+      Yönetici: admin / admin<br>
+      Öğretmen: ayse.demir@yuvasense.com.tr / Ogretmen2026!
+    </div>
+
+    <div class="switch-link">Veli misiniz? <a href="/parent-portal/login.html">Veli Portalı'na gidin</a></div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+  document.getElementById("loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const feedback = document.getElementById("formFeedback");
+    const submitBtn = document.getElementById("submitBtn");
+    feedback.style.display = "none";
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Giriş yapılıyor...";
+    try {
+      await Api.post("/api/auth/login", {
+        email: document.getElementById("email").value.trim(),
+        password: document.getElementById("password").value
+      });
+      window.location.href = "/dashboard.html";
+    } catch (err) {
+      feedback.textContent = err.message || "Giriş başarısız.";
+      feedback.style.display = "block";
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Giriş Yap";
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Çocuk Profili — YuvaSense</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main-area">
+    <header class="topbar">
+      <div><h1 id="childTitle">Çocuk Profili</h1><p class="topbar-sub"><a href="/children.html">&larr; Çocuklar listesine dön</a></p></div>
+    </header>
+    <main class="content">
+      <div class="card" id="infoCard"></div>
+
+      <div class="card">
+        <div class="card-head"><h2>Veliler</h2><button class="btn btn-ghost btn-sm" id="addParentBtn">+ Veli Ekle</button></div>
+        <div id="parentsList" class="text-muted">Yükleniyor...</div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>Son Yoklama Kayıtları</h2></div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Tarih</th><th>Durum</th><th>Giriş</th><th>Çıkış</th></tr></thead>
+            <tbody id="attendanceRows"><tr class="empty-row"><td colspan="4">Yükleniyor...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>Faturalar</h2></div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Dönem</th><th>Tutar</th><th>Vade</th><th>Durum</th></tr></thead>
+            <tbody id="invoiceRows"><tr class="empty-row"><td colspan="4">Yükleniyor...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-head"><h3>Veli Ekle</h3><button class="modal-close" id="modalClose">&times;</button></div>
+    <form id="parentForm">
+      <div class="form-group"><label>Ad Soyad</label><input type="text" id="parentName" required></div>
+      <div class="form-group"><label>E-posta</label><input type="email" id="parentEmail" required></div>
+      <div class="form-group"><label>Telefon</label><input type="tel" id="parentPhone"></div>
+      <div class="form-group"><label>Veli Portalı Şifresi</label><input type="text" id="parentPassword" placeholder="Varsayılan: Veli2026!"></div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">Kaydet</button>
+    </form>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/shell.js"></script>
+<script>
+  const childId = qs("id");
+  let CURRENT_USER = null;
+
+  function openModal() { document.getElementById("modalOverlay").classList.add("open"); }
+  function closeModal() { document.getElementById("modalOverlay").classList.remove("open"); }
+  document.getElementById("modalClose").addEventListener("click", closeModal);
+  document.getElementById("addParentBtn").addEventListener("click", openModal);
+
+  function renderChild(child) {
+    document.getElementById("childTitle").textContent = `${child.firstName} ${child.lastName}`;
+    document.getElementById("infoCard").innerHTML = `
+      <div class="card-head"><h2>Profil Bilgileri</h2><span class="badge ${statusBadgeClass(child.status)}">${child.status}</span></div>
+      <div class="form-row">
+        <div><p class="text-muted" style="margin-bottom:2px;">Sınıf</p><strong>${escapeHtml(child.classroomName || "—")}</strong></div>
+        <div><p class="text-muted" style="margin-bottom:2px;">Doğum Tarihi</p><strong>${fmtDate(child.birthDate)}</strong></div>
+      </div>
+      <div class="form-row">
+        <div><p class="text-muted" style="margin-bottom:2px;">Kayıt Tarihi</p><strong>${fmtDate(child.enrollmentDate)}</strong></div>
+        <div><p class="text-muted" style="margin-bottom:2px;">Alerji / Özel Durum</p><strong>${child.allergies ? escapeHtml(child.allergies) : "Yok"}</strong></div>
+      </div>
+      ${child.notes ? `<p class="text-muted" style="margin-top:10px;"><strong>Not:</strong> ${escapeHtml(child.notes)}</p>` : ""}
+    `;
+
+    document.getElementById("parentsList").innerHTML = child.parents.length
+      ? child.parents
+          .map((p) => `<p><strong>${escapeHtml(p.name)}</strong> — ${escapeHtml(p.email)} ${p.phone ? "· " + escapeHtml(p.phone) : ""}</p>`)
+          .join("")
+      : `<p class="text-muted">Henüz veli eklenmemiş.</p>`;
+  }
+
+  async function loadAttendance() {
+    const list = await Api.get(`/api/attendance/child/${childId}`);
+    const rows = document.getElementById("attendanceRows");
+    rows.innerHTML = list.length
+      ? list
+          .slice(0, 15)
+          .map(
+            (a) => `<tr><td>${fmtDate(a.date)}</td><td><span class="badge ${statusBadgeClass(a.status)}">${a.status}</span></td><td>${a.checkInTime || "—"}</td><td>${a.checkOutTime || "—"}</td></tr>`
+          )
+          .join("")
+      : `<tr class="empty-row"><td colspan="4">Henüz yoklama kaydı yok.</td></tr>`;
+  }
+
+  async function loadInvoices() {
+    const list = await Api.get(`/api/invoices/child/${childId}`);
+    const rows = document.getElementById("invoiceRows");
+    rows.innerHTML = list.length
+      ? list
+          .map(
+            (i) => `<tr><td>${i.period}</td><td>${fmtMoney(i.amount)}</td><td>${fmtDate(i.dueDate)}</td><td><span class="badge ${statusBadgeClass(i.status)}">${i.status}</span></td></tr>`
+          )
+          .join("")
+      : `<tr class="empty-row"><td colspan="4">Henüz fatura yok.</td></tr>`;
+  }
+
+  document.getElementById("parentForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try {
+      const child = await Api.post(`/api/children/${childId}/parents`, {
+        name: document.getElementById("parentName").value.trim(),
+        email: document.getElementById("parentEmail").value.trim(),
+        phone: document.getElementById("parentPhone").value.trim(),
+        password: document.getElementById("parentPassword").value.trim()
+      });
+      showToast("Veli eklendi.", "success");
+      closeModal();
+      renderChild(child);
+    } catch (err) {
+      showToast(err.message, "error");
+    }
+  });
+
+  (async function () {
+    CURRENT_USER = await initShell("children");
+    if (!childId) {
+      window.location.href = "/children.html";
+      return;
+    }
+    try {
+      const child = await Api.get(`/api/children/${childId}`);
+      renderChild(child);
+      await Promise.all([loadAttendance(), loadInvoices()]);
+    } catch (err) {
+      showToast(err.message || "Yüklenemedi.", "error");
+    }
+  })();
+</script>
+</body>
+</html>

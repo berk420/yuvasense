@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Panel — YuvaSense</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main-area">
+    <header class="topbar">
+      <div><h1>Panel</h1><p class="topbar-sub">Kreşinizin genel durumuna hızlı bakış</p></div>
+    </header>
+    <main class="content">
+      <div class="kpi-grid" id="kpiGrid">
+        <div class="loading-state">Yükleniyor...</div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>Sınıf Doluluğu</h2></div>
+        <div class="occupancy-list" id="occupancyList"></div>
+      </div>
+
+      <div class="card" id="demoRequestsCard" style="display:none;">
+        <div class="card-head">
+          <h2>Son Demo Talepleri</h2>
+          <span class="text-muted">Tanıtım sitesinden gelen talepler</span>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Tarih</th><th>Ad</th><th>Kreş</th><th>E-posta</th><th>Telefon</th></tr></thead>
+            <tbody id="demoRequestsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/shell.js"></script>
+<script>
+  (async function () {
+    const user = await initShell("dashboard");
+
+    try {
+      const summary = await Api.get("/api/dashboard/summary");
+      const t = summary.totals;
+
+      document.getElementById("kpiGrid").innerHTML = `
+        <div class="kpi-card"><span class="label">Kayıtlı Çocuk</span><strong>${t.children}</strong></div>
+        <div class="kpi-card"><span class="label">Bugünkü Devam Oranı</span><strong>%${t.attendanceRate}</strong></div>
+        <div class="kpi-card"><span class="label">Aktif Sınıf</span><strong>${t.classrooms}</strong></div>
+        <div class="kpi-card"><span class="label">Personel</span><strong>${t.staff}</strong></div>
+        <div class="kpi-card"><span class="label">Bekleyen Fatura</span><strong>${t.pendingInvoices}</strong><span class="delta warn">ödeme bekleniyor</span></div>
+        <div class="kpi-card"><span class="label">Gecikmiş Fatura</span><strong>${t.overdueInvoices}</strong><span class="delta danger">${fmtMoney(t.overdueAmount)}</span></div>
+      `;
+
+      const maxCap = Math.max(...summary.classroomOccupancy.map((c) => c.capacity), 1);
+      document.getElementById("occupancyList").innerHTML = summary.classroomOccupancy
+        .map((c) => {
+          const pct = Math.min(100, Math.round((c.count / c.capacity) * 100));
+          return `
+          <div class="occupancy-item">
+            <div class="occ-label"><span>${escapeHtml(c.name)}</span><span>${c.count} / ${c.capacity}</span></div>
+            <div class="occ-bar-bg"><div class="occ-bar-fill" style="width:${pct}%;background:${c.color}"></div></div>
+          </div>`;
+        })
+        .join("");
+
+      if (user.role === "admin") {
+        document.getElementById("demoRequestsCard").style.display = "block";
+        document.getElementById("demoRequestsBody").innerHTML = summary.recentDemoRequests.length
+          ? summary.recentDemoRequests
+              .map(
+                (r) => `
+              <tr>
+                <td>${fmtDate(r.createdAt)}</td>
+                <td>${escapeHtml(r.name)}</td>
+                <td>${escapeHtml(r.daycareName)}</td>
+                <td>${escapeHtml(r.email)}</td>
+                <td>${escapeHtml(r.phone)}</td>
+              </tr>`
+              )
+              .join("")
+          : `<tr class="empty-row"><td colspan="5">Henüz demo talebi yok.</td></tr>`;
+      }
+    } catch (err) {
+      showToast(err.message || "Veriler yüklenemedi.", "error");
+    }
+  })();
+</script>
+</body>
+</html>

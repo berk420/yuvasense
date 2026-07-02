@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Faturalandırma — YuvaSense</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main-area">
+    <header class="topbar">
+      <div><h1>Faturalandırma</h1><p class="topbar-sub">Aylık faturaları oluşturun ve ödemeleri takip edin</p></div>
+      <div><button class="btn btn-primary" id="addBtn">+ Yeni Fatura</button></div>
+    </header>
+    <main class="content">
+      <div class="filters-bar">
+        <select id="statusFilter">
+          <option value="">Tüm Durumlar</option>
+          <option value="bekliyor">Bekliyor</option>
+          <option value="ödendi">Ödendi</option>
+          <option value="gecikmiş">Gecikmiş</option>
+        </select>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Çocuk</th><th>Dönem</th><th>Tutar</th><th>Vade</th><th>Durum</th><th></th></tr></thead>
+            <tbody id="rows"><tr class="empty-row"><td colspan="6">Yükleniyor...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-head"><h3>Yeni Fatura</h3><button class="modal-close" id="modalClose">&times;</button></div>
+    <form id="invoiceForm">
+      <div class="form-group"><label>Çocuk</label><select id="childId" required></select></div>
+      <div class="form-row">
+        <div class="form-group"><label>Dönem (YYYY-AA)</label><input type="month" id="period" required></div>
+        <div class="form-group"><label>Vade Tarihi</label><input type="date" id="dueDate"></div>
+      </div>
+      <div class="form-group"><label>Kalem Açıklaması</label><input type="text" id="itemLabel" value="Aylık Kreş Ücreti" required></div>
+      <div class="form-group"><label>Tutar (₺)</label><input type="number" id="itemAmount" min="0" step="0.01" value="4500" required></div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">Kaydet</button>
+    </form>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/shell.js"></script>
+<script>
+  function openModal() { document.getElementById("modalOverlay").classList.add("open"); }
+  function closeModal() { document.getElementById("modalOverlay").classList.remove("open"); }
+  document.getElementById("modalClose").addEventListener("click", closeModal);
+  document.getElementById("addBtn").addEventListener("click", openModal);
+
+  async function loadChildOptions() {
+    const list = await Api.get("/api/children");
+    const sel = document.getElementById("childId");
+    list.forEach((c) => (sel.innerHTML += `<option value="${c.id}">${escapeHtml(c.firstName)} ${escapeHtml(c.lastName)}</option>`));
+  }
+
+  async function loadInvoices() {
+    const status = document.getElementById("statusFilter").value;
+    const params = new URLSearchParams();
+    if (status) params.set("status", status);
+    const list = await Api.get("/api/invoices?" + params.toString());
+    const rows = document.getElementById("rows");
+    if (!list.length) {
+      rows.innerHTML = `<tr class="empty-row"><td colspan="6">Henüz fatura yok.</td></tr>`;
+      return;
+    }
+    rows.innerHTML = list
+      .map(
+        (i) => `
+        <tr>
+          <td>${escapeHtml(i.childName)}</td>
+          <td>${i.period}</td>
+          <td>${fmtMoney(i.amount)}</td>
+          <td>${fmtDate(i.dueDate)}</td>
+          <td><span class="badge ${statusBadgeClass(i.status)}">${i.status}</span></td>
+          <td class="actions">
+            ${i.status !== "ödendi" ? `<button class="btn btn-ghost btn-sm" data-pay="${i.id}">Ödendi İşaretle</button>` : ""}
+          </td>
+        </tr>`
+      )
+      .join("");
+
+    rows.querySelectorAll("[data-pay]").forEach((btn) =>
+      btn.addEventListener("click", async () => {
+        try {
+          await Api.put(`/api/invoices/${btn.dataset.pay}/mark-paid`);
+          showToast("Fatura ödendi olarak işaretlendi.", "success");
+          loadInvoices();
+        } catch (err) {
+          showToast(err.message, "error");
+        }
+      })
+    );
+  }
+
+  document.getElementById("invoiceForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const amount = Number(document.getElementById("itemAmount").value);
+    try {
+      await Api.post("/api/invoices", {
+        childId: document.getElementById("childId").value,
+        period: document.getElementById("period").value,
+        dueDate: document.getElementById("dueDate").value || undefined,
+        items: [{ label: document.getElementById("itemLabel").value.trim(), amount }]
+      });
+      showToast("Fatura oluşturuldu.", "success");
+      closeModal();
+      loadInvoices();
+    } catch (err) {
+      showToast(err.message, "error");
+    }
+  });
+
+  document.getElementById("statusFilter").addEventListener("change", loadInvoices);
+
+  (async function () {
+    await initShell("billing");
+    await loadChildOptions();
+    try {
+      await loadInvoices();
+    } catch (err) {
+      showToast(err.message || "Yüklenemedi.", "error");
+    }
+  })();
+</script>
+</body>
+</html>
