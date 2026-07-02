@@ -1,0 +1,27 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, yuvasense]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Sync files to IIS wwwroot
+        shell: cmd
+        run: |
+          if not exist "C:\inetpub\wwwroot\YuvaSense" mkdir "C:\inetpub\wwwroot\YuvaSense"
+          xcopy /s /e /y /i /exclude:deploy-exclude.txt "%GITHUB_WORKSPACE%" "C:\inetpub\wwwroot\YuvaSense"
+
+      - name: Install production dependencies
+        shell: cmd
+        working-directory: C:\inetpub\wwwroot\YuvaSense
+        run: npm install --omit=dev
+
+      - name: Restart app (PM2)
+        shell: cmd
+        run: pm2 restart yuvasense --update-env
