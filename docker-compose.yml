@@ -1,0 +1,13 @@
+services:
+  app:
+    build: .
+    container_name: yuvasense
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:4101:4101"
+    environment:
+      - NODE_ENV=production
+      - PORT=4101
+      - SESSION_SECRET=${SESSION_SECRET}
+    volumes:
+      - ./data:/app/data
