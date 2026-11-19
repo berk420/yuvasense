@@ -1,25 +1,25 @@
-name: Deploy to Production
+# name: Deploy to Production
 
-on:
-  push:
-    branches: [main]
+# on:
+#   push:
+#     branches: [main]
 
-jobs:
-  deploy:
-    runs-on: self-hosted
-    steps:
-      - name: Deploy over SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          script: |
-            set -e
-            cd /root/yuvasense/app
-            git fetch origin main
-            git reset --hard origin/main
-            cd /root/yuvasense
-            docker compose build
-            docker compose up -d
-            docker image prune -f
+# jobs:
+#   deploy:
+#     runs-on: self-hosted
+#     steps:
+#       - name: Deploy over SSH
+#         uses: appleboy/ssh-action@v1.0.3
+#         with:
+#           host: ${{ secrets.DEPLOY_HOST }}
+#           username: ${{ secrets.DEPLOY_USER }}
+#           key: ${{ secrets.DEPLOY_SSH_KEY }}
+#         script: |
+#           set -e
+#           cd /root/yuvasense/app
+#           git fetch origin main
+#           git reset --hard origin/main
+#           cd /root/yuvasense
+#           docker compose build
+#           docker compose up -d
+#           docker image prune -f
